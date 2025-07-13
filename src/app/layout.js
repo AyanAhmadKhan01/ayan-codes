@@ -25,10 +25,8 @@ export default function RootLayout({ children}) {
         >
           <NextAuthProvider>
           <PostProvider>
-
         {children}
         </PostProvider>
-
           </NextAuthProvider>
         </ThemeProvider>
 

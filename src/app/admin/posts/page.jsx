@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { postContext } from "@/app/context/postContext";
-import { deletePostContext } from "@/app/context/deletePostContext";
 
 import Link from "next/link";
 
