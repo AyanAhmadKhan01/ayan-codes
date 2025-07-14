@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useContext } from "react";
 import AnalyticsCard from "@/components/adminPanel/post/analyticsCards";
 import FilterPost from "@/components/adminPanel/post/filterPost";
 import PostForm from "@/components/adminPanel/post/postForm";
+
 import React from "react";
 import {
   Plus,
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { postContext } from "@/app/context/postContext";
 
 import Link from "next/link";
+import { fetchPost } from "@/app/context/fetchPost";
 
 
 const statusColors = {
@@ -29,9 +31,10 @@ const statusColors = {
 
 export default function Post() {
   const { showMenu, handleMenu } = useContext(postContext);
+  const {postData , setPostData} = useContext(fetchPost);
 
   const [loading, setLoading] = useState(true);
-  const [showBlogs, setShowBlogs] = useState([]);
+  const [showBlogs, setShowBlogs] = useState(postData);
 
   const handleDeleteBlog = async (id) => {
     try {
@@ -54,20 +57,6 @@ export default function Post() {
       setLoading(false);
     }, 1000);
   }, []);
-
-  useEffect(() => {
-  const fetchPost = async () => {
-    try {
-      const response = await fetch("/api/post");
-      const data = await response.json();
-      if (!response.ok) return;
-      setShowBlogs(data)
-    } catch (err) {
-      console.error("Failed to fetch Post");
-    }
-  };
-  fetchPost();
-}, []);
 
 
 
@@ -191,12 +180,11 @@ export default function Post() {
   })}
 </div>
 
-
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleMenu()}
+                  onClick={() => {handleMenu(); setPostData();}}
                   className="rounded-none flex-1"
                 >
                   <Edit className="w-4 h-4 mr-2" />

@@ -32,6 +32,7 @@ export default function PostForm() {
        const [imageUrl, setImageUrl] = useState('')
         const [useSimpleEditor, setUseSimpleEditor] = useState(false)
         const [showImageModal, setShowImageModal] = useState(false)
+        
    
        const quillRef = useRef(null)
 
@@ -48,7 +49,8 @@ export default function PostForm() {
         setShowEditor(true)
     }
 
-    const handleEditBlog = (blog) => {
+    const handleEditBlog = async (blog) => {
+      
         setEditingBlog(blog)
         setTitle(blog.title)
         setSlug(blog.slug)
@@ -59,6 +61,21 @@ export default function PostForm() {
         setSeoTitle(blog.seoTitle)
         setMetaDescription(blog.metaDescription)
         setShowEditor(true)
+
+        try {
+            const response = await fetch('/api/post',{
+                method: 'PATCH',
+                headers: {
+              'Content-Type': 'application/json',
+             },
+             body: JSON.stringify()
+            })
+            if(!response.ok) {
+                console.error("Post Update Failed");
+            }
+        } catch (error) {
+            console.error('Failed to Update Post', error)
+        }
     }
 
     const handleSaveDraft = () => {
@@ -135,12 +152,6 @@ export default function PostForm() {
     }
 
 
-    const handleDeleteBlog = (blogId) => {
-        if (confirm('Are you sure you want to delete this blog post?')) {
-            setBlogs(prev => prev.filter(blog => blog.id !== blogId))
-        }
-    }
-
     const handleAddTag = () => {
         if (newTag.trim() && !tags.includes(newTag.trim())) {
             setTags([...tags, newTag.trim()])
@@ -172,13 +183,7 @@ export default function PostForm() {
         }
     }
 
-    const handleSelectBlog = (blogId) => {
-        setSelectedBlogs(prev => 
-            prev.includes(blogId) 
-                ? prev.filter(id => id !== blogId)
-                : [...prev, blogId]
-        )
-    }
+ 
 
     return(
         <>

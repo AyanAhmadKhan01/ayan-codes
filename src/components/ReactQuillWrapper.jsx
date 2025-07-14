@@ -3,13 +3,13 @@
 import { forwardRef, useEffect, useRef, useImperativeHandle } from 'react'
 import dynamic from 'next/dynamic'
 
-// Dynamically import ReactQuill with no SSR
+
 const ReactQuillComponent = dynamic(() => import('react-quill'), {
     ssr: false,
     loading: () => <div className="h-64 bg-muted animate-pulse rounded"></div>
 })
 
-// Suppress React 19 findDOMNode warnings
+
 if (typeof window !== 'undefined') {
     const originalConsoleError = console.error
     console.error = (...args) => {
@@ -21,7 +21,7 @@ if (typeof window !== 'undefined') {
     }
 }
 
-// React 19 compatible wrapper for ReactQuill
+
 const ReactQuillWrapper = forwardRef(({ 
     value, 
     onChange, 

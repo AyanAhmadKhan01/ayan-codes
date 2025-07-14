@@ -49,3 +49,32 @@ export async function DELETE(req) {
     }
 }
 
+
+export async function PATCH(req) {
+  try {
+    await connectDB();
+    const body = await req.json();
+    const {_id, ...updateFields } = body;
+
+    if(!_id) {
+      return NextResponse.json({ error: "Post Id is required"}, {status: 400});
+    }
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      _id,
+      {$set: updateFields},
+      {new: true}
+    );
+
+    if(!updateFields) {
+      return NextResponse.json({error: "Post not found"}, {status: 404});
+    }
+
+    return NextResponse.json(updatedPost, {status: 200});
+  } catch (error) {
+    return NextResponse.json(
+      {error: "Failed to update post", details: error.message},
+      {status: 500}
+    );
+  }
+}

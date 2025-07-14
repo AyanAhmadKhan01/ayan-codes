@@ -2,6 +2,7 @@ import "./globals.css";
 import { ThemeProvider } from "./themeProvider";
 import PostProvider from "./context/postContext";
 import { NextAuthProvider } from "@/app/providers";
+import FetchPostProvider from "./context/fetchPost";
 
 
 
@@ -24,12 +25,13 @@ export default function RootLayout({ children}) {
         disableTransitionOnChange
         >
           <NextAuthProvider>
+            <FetchPostProvider>
           <PostProvider>
         {children}
         </PostProvider>
+        </FetchPostProvider>
           </NextAuthProvider>
         </ThemeProvider>
-
       </body>
     </html>
   );
