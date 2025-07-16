@@ -11,7 +11,6 @@ import {
     Edit,
     Trash2,
     Eye,
-    Download,
     Activity,
     Users as UsersIcon,
     Crown,

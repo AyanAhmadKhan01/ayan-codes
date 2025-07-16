@@ -1,8 +1,10 @@
-import QuillEditor from '@/components/QuillEditor'
+import QuillEditor from '@/components/QuillEditorDynamic'
 import SimpleEditor from '@/components/SimpleEditor'
 import { Button } from "@/components/ui/button"
 import { postContext } from '@/app/context/postContext'
-import { useState, useRef } from 'react'
+import { postIdContext } from '@/app/admin/posts/page'
+import { useState, useRef, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
 import { useContext } from 'react'
 import {
     Save,
@@ -15,10 +17,13 @@ import {
 
 export default function PostForm() {
 
+    const {register, handleSubmit, watch, formState: {errors, isSubmitting}} = useForm();
+    
     const {handleMenu} = useContext(postContext)
+    const { postId } = useContext(postIdContext)
 
        const [blogs, setBlogs] = useState([]);
-       const [showEditor, setShowEditor] = useState([]);
+       const [showEditor, setShowEditor] = useState(false);
        const [editingBlog, setEditingBlog] = useState(null)
        const [title, setTitle] = useState('')
        const [slug, setSlug] = useState('')
@@ -36,32 +41,25 @@ export default function PostForm() {
    
        const quillRef = useRef(null)
 
-           const handleNewBlog = () => {
-        setEditingBlog(null)
-        setTitle('')
-        setSlug('')
-        setExcerpt('')
-        setContent('')
-        setFeaturedImage('')
-        setTags([])
-        setSeoTitle('')
-        setMetaDescription('')
-        setShowEditor(true)
-    }
+    
+       useEffect(() => {
+        const fetchPostIdData = async () => {
+            try {
+                const response = await fetch(`/api/post/${postId}`,)
+                const data = await response.json();
+                setBlogs(data);
+        
+
+            } catch (error) {
+                console.error('Failed to get post id data', error);
+            }
+        }
+        fetchPostIdData();
+       }, [postId]);
+
+
 
     const handleEditBlog = async (blog) => {
-      
-        setEditingBlog(blog)
-        setTitle(blog.title)
-        setSlug(blog.slug)
-        setExcerpt(blog.excerpt)
-        setContent(blog.content)
-        setFeaturedImage(blog.featuredImage)
-        setTags(blog.tags)
-        setSeoTitle(blog.seoTitle)
-        setMetaDescription(blog.metaDescription)
-        setShowEditor(true)
-
         try {
             const response = await fetch('/api/post',{
                 method: 'PATCH',
@@ -183,6 +181,10 @@ export default function PostForm() {
         }
     }
 
+ const onSubmit = async (data)  => {
+    await new Promise((r) => setTimeout(r, 2000));
+        console.log("Submit the form", data)
+    }
  
 
     return(
@@ -312,10 +314,14 @@ export default function PostForm() {
 
                    
                     <div className="space-y-6">
-                        
                         <div className="border border-border/20 bg-card/50 backdrop-blur-sm p-6">
                             <h3 className="text-lg font-medium mb-4">Actions</h3>
                             <div className="space-y-3">
+                                <div>
+                                 <input defaultValue="test" {...register("example")} />
+                                 <button className='cursor-pointer' disabled={isSubmitting} onClick={handleSubmit(onSubmit)}>{isSubmitting ? 'wait' : 'Sumbit'}</button>
+                              
+                                 </div>
                                 <Button 
                                     onClick={handleSaveDraft}
                                     variant="outline" 
@@ -325,8 +331,9 @@ export default function PostForm() {
                                     Save as Draft
                                 </Button>
                                 <Button 
-                                    onClick={handlePublish}
-                                    className="w-full rounded-none"
+                                    onClick={() => {handlePublish(); handleEditBlog();}}
+                                    disabled={isSubmitting}
+                                    className="w-full rounded-none cursor-pointer"
                                 >
                                     <Send className="w-4 h-4 mr-2" />
                                     Publish

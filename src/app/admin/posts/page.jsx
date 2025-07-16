@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useContext } from "react";
+import { useState, useEffect, useRef, useContext, createContext, Children } from "react";
 import AnalyticsCard from "@/components/adminPanel/post/analyticsCards";
 import FilterPost from "@/components/adminPanel/post/filterPost";
 import PostForm from "@/components/adminPanel/post/postForm";
@@ -29,9 +29,23 @@ const statusColors = {
 
 
 
+export const postIdContext = createContext(null);
+
+export function PostIdProvider({children}) {
+  const [postId, setPostId] = useState(null);
+
+
+  return(
+    <postIdContext.Provider value={{ postId, setPostId }}>
+      {children}
+    </postIdContext.Provider>
+  )
+}
+
 export default function Post() {
   const { showMenu, handleMenu } = useContext(postContext);
-  const {postData , setPostData} = useContext(fetchPost);
+  const {postData } = useContext(fetchPost);
+  const { setPostId } = useContext(postIdContext);
 
   const [loading, setLoading] = useState(true);
   const [showBlogs, setShowBlogs] = useState(postData);
@@ -184,7 +198,7 @@ export default function Post() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {handleMenu(); setPostData();}}
+                  onClick={() => {handleMenu(); setPostId(blog._id);}}
                   className="rounded-none flex-1"
                 >
                   <Edit className="w-4 h-4 mr-2" />

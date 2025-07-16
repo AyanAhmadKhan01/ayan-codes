@@ -1,8 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
-import Quill from 'quill'
-import 'quill/dist/quill.snow.css'
 
 const QuillEditor = forwardRef(({ 
     value = '', 
@@ -28,85 +26,97 @@ const QuillEditor = forwardRef(({
     }))
 
     useEffect(() => {
-        if (!containerRef.current || quillRef.current) return
+        if (!containerRef.current || quillRef.current || typeof window === 'undefined') return
 
-    
-        const imageHandler = () => {
-            if (onImageInsert) {
-                onImageInsert()
-            } else {
-                const url = prompt('Enter image URL:')
-                if (url) {
-                    const range = quillRef.current.getSelection()
-                    if (range) {
-                        quillRef.current.insertEmbed(range.index, 'image', url)
-                        quillRef.current.setSelection(range.index + 1)
+        // Dynamically import Quill only on client side
+        const loadQuillEditor = async () => {
+            try {
+                const QuillModule = await import('quill')
+                await import('quill/dist/quill.snow.css')
+                const Quill = QuillModule.default
+                
+                if (!containerRef.current) return
+
+                const imageHandler = () => {
+                    if (onImageInsert) {
+                        onImageInsert()
+                    } else {
+                        const url = prompt('Enter image URL:')
+                        if (url) {
+                            const range = quillRef.current.getSelection()
+                            if (range) {
+                                quillRef.current.insertEmbed(range.index, 'image', url)
+                                quillRef.current.setSelection(range.index + 1)
+                            }
+                        }
                     }
                 }
+
+                const quillConfig = {
+                    theme: 'snow',
+                    placeholder,
+                    readOnly,
+                    modules: {
+                        toolbar: {
+                            container: [
+                                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                                ['bold', 'italic', 'underline', 'strike'],
+                                [{ 'color': [] }, { 'background': [] }],
+                                [{ 'align': [] }],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                ['blockquote', 'code-block'],
+                                ['link', 'image'],
+                                ['clean']
+                            ],
+                            handlers: {
+                                image: imageHandler
+                            }
+                        },
+                        clipboard: {
+                            matchVisual: false,
+                        }
+                    },
+                    formats: [
+                        'header', 'bold', 'italic', 'underline', 'strike',
+                        'color', 'background', 'align', 'list',
+                        'blockquote', 'code-block', 'link', 'image'
+                    ]
+                }
+
+                quillRef.current = new Quill(containerRef.current, quillConfig)
+
+                if (value) {
+                    isUpdatingRef.current = true
+                    quillRef.current.root.innerHTML = value
+                    isUpdatingRef.current = false
+                }
+
+                const handleTextChange = () => {
+                    if (isUpdatingRef.current) return
+                    
+                    const html = quillRef.current.root.innerHTML
+                    if (onChange) {
+                        onChange(html)
+                    }
+                }
+
+                quillRef.current.on('text-change', handleTextChange)
+
+                const editorContainer = containerRef.current.querySelector('.ql-editor')
+                if (editorContainer) {
+                    editorContainer.style.minHeight = height
+                }
+
+            } catch (error) {
+                console.error('Failed to load Quill editor:', error)
             }
         }
 
-       
-        const quillConfig = {
-            theme: 'snow',
-            placeholder,
-            readOnly,
-            modules: {
-                toolbar: {
-                    container: [
-                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        [{ 'color': [] }, { 'background': [] }],
-                        [{ 'align': [] }],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                        ['blockquote', 'code-block'],
-                        ['link', 'image'],
-                        ['clean']
-                    ],
-                    handlers: {
-                        image: imageHandler
-                    }
-                },
-                clipboard: {
-                    matchVisual: false,
-                }
-            },
-            formats: [
-                'header', 'bold', 'italic', 'underline', 'strike',
-                'color', 'background', 'align', 'list',
-                'blockquote', 'code-block', 'link', 'image'
-            ]
-        }
-
-      
-        quillRef.current = new Quill(containerRef.current, quillConfig)
-
-        if (value) {
-            isUpdatingRef.current = true
-            quillRef.current.root.innerHTML = value
-            isUpdatingRef.current = false
-        }
-
-     
-        const handleTextChange = () => {
-            if (isUpdatingRef.current) return
-            
-            const html = quillRef.current.root.innerHTML
-            if (onChange) {
-                onChange(html)
-            }
-        }
-
-        quillRef.current.on('text-change', handleTextChange)
-
-        const editorContainer = containerRef.current.querySelector('.ql-editor')
-        if (editorContainer) {
-            editorContainer.style.minHeight = height
-        }
+        loadQuillEditor()
 
         return () => {
             if (quillRef.current) {
-                quillRef.current.off('text-change', handleTextChange)
+                quillRef.current.off('text-change')
             }
         }
     }, [placeholder, readOnly, height, onImageInsert])

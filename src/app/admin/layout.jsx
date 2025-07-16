@@ -5,6 +5,7 @@ import {usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { signOut } from 'next-auth/react'
+import { PostIdProvider } from './posts/page'
 import { 
     Users, 
     FileText, 
@@ -187,19 +188,21 @@ export default function AdminLayout({ children }) {
     }
 
     return (
-        <div className="min-h-screen bg-background">
-            <AdminSidebar 
-                isOpen={sidebarOpen} 
-                onClose={() => setSidebarOpen(false)} 
-            />
-            
-            <div className="lg:ml-64">
-                <AdminHeader onMenuClick={() => setSidebarOpen(true)} />
+        <PostIdProvider>
+            <div className="min-h-screen bg-background">
+                <AdminSidebar 
+                    isOpen={sidebarOpen} 
+                    onClose={() => setSidebarOpen(false)} 
+                />
                 
-                <main className="min-h-[calc(100vh-73px)]">
-                    {children}
-                </main>
+                <div className="lg:ml-64">
+                    <AdminHeader onMenuClick={() => setSidebarOpen(true)} />
+                    
+                    <main className="min-h-[calc(100vh-73px)]">
+                        {children}
+                    </main>
+                </div>
             </div>
-        </div>
+        </PostIdProvider>
     )
 }
