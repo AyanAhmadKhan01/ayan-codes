@@ -44,7 +44,12 @@ const QuillEditor = forwardRef(({
 }, ref) => {
   const quillRef = useRef(null)
   
-  // Track active formatting states
+  const [showLinkModal, setShowLinkModal] = useState(false)
+  const [linkUrl, setLinkUrl] = useState('')
+  const [linkText, setLinkText] = useState('')
+  const [linkRange, setLinkRange] = useState(null)
+  
+
   const [activeFormats, setActiveFormats] = useState({
     bold: false,
     italic: false,
@@ -57,7 +62,7 @@ const QuillEditor = forwardRef(({
     link: false
   })
 
-  // Update active formats when selection changes
+  
   const updateActiveFormats = () => {
     const editor = quillRef.current?.getEditor()
     if (editor) {
@@ -76,7 +81,6 @@ const QuillEditor = forwardRef(({
     }
   }
 
-
   useImperativeHandle(ref, () => ({
     getEditor: () => quillRef.current?.getEditor(),
     focus: () => quillRef.current?.focus(),
@@ -84,7 +88,6 @@ const QuillEditor = forwardRef(({
     getHTML: () => value,
     getText: () => quillRef.current?.getEditor()?.getText() || '',
   }))
-
 
   const handleImageClick = () => {
     if (onImageInsert) {
@@ -95,35 +98,78 @@ const QuillEditor = forwardRef(({
         const editor = quillRef.current?.getEditor()
         if (editor) {
           const range = editor.getSelection()
-          editor.insertEmbed(range ? range.index : 0, 'image', url)
-          if (range) {
-            editor.setSelection(range.index + 1)
-          }
+          const insertIndex = range ? range.index : editor.getLength()
+          editor.insertEmbed(insertIndex, 'image', url)
+          editor.setSelection(insertIndex + 1)
         }
       }
     }
   }
 
   const handleLinkClick = () => {
-    if (onImageInsert) {
-      // Use the same modal pattern as image insertion
-      onImageInsert('link')
-    } else {
-      const url = prompt('Enter link URL:')
-      if (url) {
-        const text = prompt('Enter link text (optional):') || url
-        const editor = quillRef.current?.getEditor()
-        const range = editor?.getSelection()
-        if (range && range.length > 0) {
-          editor.format('link', url)
-        } else {
-          editor?.insertText(range?.index || 0, text, 'link', url)
-        }
+    const editor = quillRef.current?.getEditor()
+    if (editor) {
+      const range = editor.getSelection()
+      if (!range) {
+        editor.focus()
+        setTimeout(() => {
+          const newRange = editor.getSelection()
+          if (newRange) {
+            setLinkRange(newRange)
+            setLinkText('')
+            setLinkUrl('')
+            setShowLinkModal(true)
+          }
+        }, 100)
+        return
       }
+      
+      setLinkRange(range)
+      
+      if (range && range.length > 0) {
+        const selectedText = editor.getText(range.index, range.length)
+        setLinkText(selectedText)
+      } else {
+        setLinkText('')
+      }
+      
+      setLinkUrl('')
+      setShowLinkModal(true)
     }
   }
 
-  // Quill modules configuration with proper toolbar
+  const handleLinkSubmit = () => {
+    const editor = quillRef.current?.getEditor()
+    if (editor && linkRange && linkUrl) {
+      if (linkRange.length > 0) {
+  
+        editor.setSelection(linkRange)
+        editor.format('link', linkUrl)
+      } else {
+        const text = linkText || linkUrl
+        editor.insertText(linkRange.index, text)
+        editor.setSelection(linkRange.index, text.length)
+        editor.format('link', linkUrl)
+        editor.setSelection(linkRange.index + text.length)
+      }
+      
+  
+      setShowLinkModal(false)
+      setLinkUrl('')
+      setLinkText('')
+      setLinkRange(null)
+      setTimeout(updateActiveFormats, 10)
+    }
+  }
+
+  const handleLinkCancel = () => {
+    setShowLinkModal(false)
+    setLinkUrl('')
+    setLinkText('')
+    setLinkRange(null)
+  }
+
+
   const modules = {
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
@@ -139,38 +185,47 @@ const QuillEditor = forwardRef(({
     }
   }
 
-  // Fixed formats array - removed 'bullet' and added proper ones
+ 
   const formats = [
     'header', 'bold', 'italic', 'underline', 
     'list', 'align', 'link', 'image', 'blockquote', 'code-block'
   ]
 
-  // Set up selection change listener
+
   useEffect(() => {
     const editor = quillRef.current?.getEditor()
     if (editor) {
-      // Initial format check
       updateActiveFormats()
       
-      // Set up event listeners
-      editor.on('selection-change', updateActiveFormats)
-      editor.on('text-change', updateActiveFormats)
+      const handleSelectionChange = (range) => {
+        if (range && editor.hasFocus()) {
+          updateActiveFormats()
+        }
+      }
+      
+      const handleTextChange = () => {
+        if (editor.hasFocus()) {
+          updateActiveFormats()
+        }
+      }
+      
+      editor.on('selection-change', handleSelectionChange)
+      editor.on('text-change', handleTextChange)
       
       return () => {
-        editor.off('selection-change', updateActiveFormats)
-        editor.off('text-change', updateActiveFormats)
+        editor.off('selection-change', handleSelectionChange)
+        editor.off('text-change', handleTextChange)
       }
     }
-  }, [value]) // Add value as dependency to ensure it runs when editor content changes
+  }, [value])
 
-  // Also trigger update when editor becomes available
   useEffect(() => {
-    if (quillRef.current?.getEditor()) {
+    const editor = quillRef.current?.getEditor()
+    if (editor) {
       updateActiveFormats()
     }
   }, [quillRef.current])
 
-  // Helper function to get button classes based on active state
   const getButtonClasses = (isActive) => {
     const baseClasses = "p-2 rounded-sm transition-colors border"
     if (isActive) {
@@ -181,17 +236,70 @@ const QuillEditor = forwardRef(({
 
   return (
     <div className="quill-editor-wrapper border border-border/20 bg-card/50 backdrop-blur-sm rounded-sm overflow-hidden">
+      
+      {showLinkModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card/95 backdrop-blur-sm border border-border/20 rounded-lg p-6 w-96 max-w-md mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold mb-4 text-foreground">Add Link</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1 text-muted-foreground">URL</label>
+                <input
+                  type="url"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full px-3 py-2 bg-background border border-border/20 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
+                  autoFocus
+                />
+              </div>
+              
+              {linkRange && linkRange.length === 0 && (
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-muted-foreground">Link Text</label>
+                  <input
+                    type="text"
+                    value={linkText}
+                    onChange={(e) => setLinkText(e.target.value)}
+                    placeholder="Enter link text"
+                    className="w-full px-3 py-2 bg-background border border-border/20 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-foreground placeholder:text-muted-foreground/50"
+                  />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={handleLinkSubmit}
+                disabled={!linkUrl}
+                className="flex-1 bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors"
+              >
+                Add Link
+              </button>
+              <button
+                onClick={handleLinkCancel}
+                className="flex-1 bg-muted text-muted-foreground py-2 px-4 rounded-md hover:bg-muted/80 hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-1 p-3 border-b border-border/20 bg-background/50 flex-wrap">
         
-  
         <div className="flex gap-1">
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               const editor = quillRef.current?.getEditor()
-              editor?.format('bold', !activeFormats.bold)
-              setTimeout(updateActiveFormats, 10) // Update after format is applied
+              if (editor) {
+                editor.format('bold', !activeFormats.bold)
+                setTimeout(updateActiveFormats, 10)
+              }
             }}
             className={getButtonClasses(activeFormats.bold)}
             title="Bold"
@@ -200,10 +308,13 @@ const QuillEditor = forwardRef(({
           </button>
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               const editor = quillRef.current?.getEditor()
-              editor?.format('italic', !activeFormats.italic)
-              setTimeout(updateActiveFormats, 10)
+              if (editor) {
+                editor.format('italic', !activeFormats.italic)
+                setTimeout(updateActiveFormats, 10)
+              }
             }}
             className={getButtonClasses(activeFormats.italic)}
             title="Italic"
@@ -212,10 +323,13 @@ const QuillEditor = forwardRef(({
           </button>
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               const editor = quillRef.current?.getEditor()
-              editor?.format('underline', !activeFormats.underline)
-              setTimeout(updateActiveFormats, 10)
+              if (editor) {
+                editor.format('underline', !activeFormats.underline)
+                setTimeout(updateActiveFormats, 10)
+              }
             }}
             className={getButtonClasses(activeFormats.underline)}
             title="Underline"
@@ -225,15 +339,17 @@ const QuillEditor = forwardRef(({
         </div>
         
         <div className="w-px h-6 bg-border/30 mx-2 self-center"></div>
-        
-      
+     
         <div className="flex gap-1">
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               const editor = quillRef.current?.getEditor()
-              editor?.format('header', 1)
-              setTimeout(updateActiveFormats, 10)
+              if (editor) {
+                editor.format('header', 1)
+                setTimeout(updateActiveFormats, 10)
+              }
             }}
             className={getButtonClasses(activeFormats.header === 1)}
             title="Heading 1"
@@ -242,10 +358,13 @@ const QuillEditor = forwardRef(({
           </button>
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               const editor = quillRef.current?.getEditor()
-              editor?.format('header', 2)
-              setTimeout(updateActiveFormats, 10)
+              if (editor) {
+                editor.format('header', 2)
+                setTimeout(updateActiveFormats, 10)
+              }
             }}
             className={getButtonClasses(activeFormats.header === 2)}
             title="Heading 2"
@@ -255,15 +374,17 @@ const QuillEditor = forwardRef(({
         </div>
         
         <div className="w-px h-6 bg-border/30 mx-2 self-center"></div>
-        
-     
+  
         <div className="flex gap-1">
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               const editor = quillRef.current?.getEditor()
-              editor?.format('list', 'ordered')
-              setTimeout(updateActiveFormats, 10)
+              if (editor) {
+                editor.format('list', 'ordered')
+                setTimeout(updateActiveFormats, 10)
+              }
             }}
             className={getButtonClasses(activeFormats.list === 'ordered')}
             title="Numbered List"
@@ -272,10 +393,13 @@ const QuillEditor = forwardRef(({
           </button>
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               const editor = quillRef.current?.getEditor()
-              editor?.format('list', 'bullet')
-              setTimeout(updateActiveFormats, 10)
+              if (editor) {
+                editor.format('list', 'bullet')
+                setTimeout(updateActiveFormats, 10)
+              }
             }}
             className={getButtonClasses(activeFormats.list === 'bullet')}
             title="Bullet List"
@@ -290,10 +414,13 @@ const QuillEditor = forwardRef(({
         <div className="flex gap-1">
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               const editor = quillRef.current?.getEditor()
-              editor?.format('align', '')
-              setTimeout(updateActiveFormats, 10)
+              if (editor) {
+                editor.format('align', '')
+                setTimeout(updateActiveFormats, 10)
+              }
             }}
             className={getButtonClasses(activeFormats.align === '' || !activeFormats.align)}
             title="Align Left"
@@ -302,10 +429,13 @@ const QuillEditor = forwardRef(({
           </button>
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               const editor = quillRef.current?.getEditor()
-              editor?.format('align', 'center')
-              setTimeout(updateActiveFormats, 10)
+              if (editor) {
+                editor.format('align', 'center')
+                setTimeout(updateActiveFormats, 10)
+              }
             }}
             className={getButtonClasses(activeFormats.align === 'center')}
             title="Align Center"
@@ -314,10 +444,13 @@ const QuillEditor = forwardRef(({
           </button>
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               const editor = quillRef.current?.getEditor()
-              editor?.format('align', 'right')
-              setTimeout(updateActiveFormats, 10)
+              if (editor) {
+                editor.format('align', 'right')
+                setTimeout(updateActiveFormats, 10)
+              }
             }}
             className={getButtonClasses(activeFormats.align === 'right')}
             title="Align Right"
@@ -328,14 +461,16 @@ const QuillEditor = forwardRef(({
         
         <div className="w-px h-6 bg-border/30 mx-2 self-center"></div>
         
-       
         <div className="flex gap-1">
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               const editor = quillRef.current?.getEditor()
-              editor?.format('blockquote', !activeFormats.blockquote)
-              setTimeout(updateActiveFormats, 10)
+              if (editor) {
+                editor.format('blockquote', !activeFormats.blockquote)
+                setTimeout(updateActiveFormats, 10)
+              }
             }}
             className={getButtonClasses(activeFormats.blockquote)}
             title="Quote"
@@ -344,10 +479,13 @@ const QuillEditor = forwardRef(({
           </button>
           <button 
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
               const editor = quillRef.current?.getEditor()
-              editor?.format('code-block', !activeFormats['code-block'])
-              setTimeout(updateActiveFormats, 10)
+              if (editor) {
+                editor.format('code-block', !activeFormats['code-block'])
+                setTimeout(updateActiveFormats, 10)
+              }
             }}
             className={getButtonClasses(activeFormats['code-block'])}
             title="Code Block"
@@ -358,11 +496,13 @@ const QuillEditor = forwardRef(({
         
         <div className="w-px h-6 bg-border/30 mx-2 self-center"></div>
         
-   
         <div className="flex gap-1">
           <button 
             type="button"
-            onClick={handleLinkClick}
+            onClick={(e) => {
+              e.preventDefault()
+              handleLinkClick()
+            }}
             className={getButtonClasses(activeFormats.link)}
             title="Link"
           >
@@ -370,7 +510,10 @@ const QuillEditor = forwardRef(({
           </button>
           <button 
             type="button"
-            onClick={handleImageClick}
+            onClick={(e) => {
+              e.preventDefault()
+              handleImageClick()
+            }}
             className={getButtonClasses(false)}
             title="Image"
           >
@@ -379,8 +522,6 @@ const QuillEditor = forwardRef(({
         </div>
       </div>
 
-    
-   
       <div style={{ minHeight: height }} className="[&_.ql-toolbar]:hidden [&_.ql-container]:border-none">
         <ReactQuill
           ref={quillRef}

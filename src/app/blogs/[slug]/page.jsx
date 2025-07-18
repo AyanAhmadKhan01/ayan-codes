@@ -8,7 +8,6 @@ import { ArrowLeft, Calendar, Clock, Share, Bookmark, Code, BookOpen, Palette, H
 import Navbar from '../../sections/navbar'
 import Footer from '../../sections/footer'
 
-// Skeleton Components
 function BlogContentSkeleton() {
     return (
         <div className="animate-pulse">
@@ -40,142 +39,10 @@ export default function BlogPage() {
     const [newComment, setNewComment] = useState('')
     const [commentLoading, setCommentLoading] = useState(false)
 
-    // Mock related blogs data
-    const relatedBlogs = [
-        {
-            id: 2,
-            category: "Tutorial",
-            title: "Mastering React Hooks: A Complete Guide",
-            description: "A deep dive into React hooks and how to use them effectively in your projects.",
-            date: "Dec 10, 2024",
-            readTime: "12 min read",
-            icon: BookOpen,
-            slug: "mastering-react-hooks",
-            likes: 42
-        },
-        {
-            id: 3,
-            category: "Design",
-            title: "Minimalist UI Design Principles",
-            description: "How to create clean, functional interfaces that prioritize user experience.",
-            date: "Dec 5, 2024",
-            readTime: "6 min read",
-            icon: Palette,
-            slug: "minimalist-ui-design",
-            likes: 38
-        },
-        {
-            id: 4,
-            category: "Development",
-            title: "TypeScript Best Practices for Large Applications",
-            description: "Essential TypeScript patterns and practices for maintaining code quality.",
-            date: "Nov 28, 2024",
-            readTime: "10 min read",
-            icon: Code,
-            slug: "typescript-best-practices",
-            likes: 31
-        }
-    ]
 
-    // Mock blog data - replace with your API call
-    const mockBlog = {
-        id: 1,
-        slug: params.slug,
-        title: "Building Modern Web Applications with Next.js 15",
-        description: "A comprehensive guide to creating scalable, performant web applications using the latest features in Next.js 15.",
-        content: `
-# Introduction
+ 
 
-Modern web development has evolved significantly over the past few years. With the introduction of Next.js 15, developers now have access to powerful tools that make building scalable applications easier than ever before.
 
-## What's New in Next.js 15
-
-Next.js 15 brings several exciting features that enhance both developer experience and application performance:
-
-### 1. Improved App Router
-The App Router has been refined with better TypeScript support and enhanced performance optimizations.
-
-### 2. Turbopack Integration
-Full integration with Turbopack provides lightning-fast development builds and hot module replacement.
-
-### 3. Enhanced Server Components
-Server Components now offer better streaming capabilities and improved error boundaries.
-
-## Getting Started
-
-To get started with Next.js 15, you'll need to create a new project:
-
-\`\`\`bash
-npx create-next-app@latest my-app
-cd my-app
-npm run dev
-\`\`\`
-
-### Project Structure
-
-The recommended project structure follows these conventions:
-
-- \`app/\` - Contains your application routes and layouts
-- \`components/\` - Reusable UI components
-- \`lib/\` - Utility functions and configurations
-- \`public/\` - Static assets
-
-## Best Practices
-
-When building with Next.js 15, consider these best practices:
-
-1. **Use Server Components by default** - They provide better performance and SEO
-2. **Implement proper error boundaries** - Handle errors gracefully
-3. **Optimize images** - Use the built-in Image component
-4. **Leverage caching** - Utilize Next.js caching strategies
-
-## Conclusion
-
-Next.js 15 represents a significant step forward in React development. With its improved performance, better developer experience, and enhanced features, it's an excellent choice for modern web applications.
-
-The future of web development looks bright with tools like Next.js leading the way.
-        `,
-        category: "Development",
-        author: {
-            name: "Ayan",
-            avatar: "/api/placeholder/40/40",
-            bio: "Full-stack developer passionate about modern web technologies"
-        },
-        publishedAt: "2024-12-15",
-        readTime: "8 min read",
-        tags: ["Next.js", "React", "Web Development", "JavaScript"],
-        icon: Code,
-        likes: 42,
-        commentCount: 8
-    }
-
-    // Mock comments data
-    const mockComments = [
-        {
-            id: 1,
-            author: "Sarah Chen",
-            avatar: "/api/placeholder/32/32",
-            content: "Great article! The section on Turbopack integration was particularly helpful. I've been waiting for this feature.",
-            createdAt: "2024-12-16T10:30:00Z",
-            likes: 5
-        },
-        {
-            id: 2,
-            author: "Mike Johnson",
-            avatar: "/api/placeholder/32/32", 
-            content: "Thanks for the detailed explanation. The code examples made it really easy to follow along.",
-            createdAt: "2024-12-16T14:20:00Z",
-            likes: 3
-        },
-        {
-            id: 3,
-            author: "Alex Rodriguez",
-            avatar: "/api/placeholder/32/32",
-            content: "Question: Have you noticed any performance improvements with the new App Router compared to the Pages Router?",
-            createdAt: "2024-12-16T16:45:00Z",
-            likes: 2
-        }
-    ]
 
     useEffect(() => {
         const fetchBlog = async () => {
@@ -187,9 +54,7 @@ The future of web development looks bright with tools like Next.js leading the w
                 
                 // Simulate API delay
                 setTimeout(() => {
-                    setBlog(mockBlog)
-                    setLikeCount(mockBlog.likes)
-                    setComments(mockComments)
+                    setBlog(mockBlog)   
                     setLoading(false)
                 }, 1500)
             } catch (error) {
@@ -215,20 +80,20 @@ The future of web development looks bright with tools like Next.js leading the w
                 console.log('Error sharing:', error)
             }
         } else {
-            // Fallback: copy to clipboard
+           
             navigator.clipboard.writeText(window.location.href)
         }
     }
 
     const toggleBookmark = () => {
         setIsBookmarked(!isBookmarked)
-        // Add your bookmark logic here
+       
     }
 
     const toggleLike = () => {
         setIsLiked(!isLiked)
         setLikeCount(prev => isLiked ? prev - 1 : prev + 1)
-        // Add your like API call here
+      
     }
 
     const handleCommentSubmit = async (e) => {
@@ -237,11 +102,11 @@ The future of web development looks bright with tools like Next.js leading the w
 
         setCommentLoading(true)
         
-        // Simulate API call
+       
         setTimeout(() => {
             const comment = {
                 id: comments.length + 1,
-                author: "You", // Replace with actual user data
+                author: "You", 
                 avatar: "/api/placeholder/32/32",
                 content: newComment,
                 createdAt: new Date().toISOString(),
@@ -252,35 +117,11 @@ The future of web development looks bright with tools like Next.js leading the w
             setCommentLoading(false)
         }, 1000)
     }
-
-    if (error) {
-        return (
-            <>
-                <Navbar />
-                <section className="min-h-screen flex items-center justify-center px-4">
-                    <div className="text-center">
-                        <div className="w-16 h-1 bg-primary/20 mx-auto mb-8"></div>
-                        <h1 className="text-4xl font-light mb-4">Post Not Found</h1>
-                        <p className="text-muted-foreground mb-8">{error}</p>
-                        <Link href="/blogs">
-                            <Button variant="outline" className="rounded-none border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                                <ArrowLeft className="w-4 h-4 mr-2" />
-                                Back to Blogs
-                            </Button>
-                        </Link>
-                    </div>
-                </section>
-                <Footer />
-            </>
-        )
-    }
-
     return (
         <>
             <Navbar />
             
             <article className="min-h-screen">
-                {/* Hero Section */}
                 <section className="px-4 py-20">
                     <div className="max-w-4xl mx-auto">
                         {/* Back Button */}
@@ -296,7 +137,7 @@ The future of web development looks bright with tools like Next.js leading the w
                             <BlogContentSkeleton />
                         ) : (
                             <>
-                                {/* Article Header */}
+                                
                                 <header className="mb-16">
                                     <div className="flex items-center gap-3 mb-8">
                                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -315,7 +156,7 @@ The future of web development looks bright with tools like Next.js leading the w
                                         {blog.description}
                                     </p>
 
-                                    {/* Meta Information */}
+                                   
                                     <div className="flex flex-wrap items-center gap-8 pb-8 border-b border-border/20">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
@@ -377,14 +218,14 @@ The future of web development looks bright with tools like Next.js leading the w
                                     </div>
                                 </header>
 
-                                {/* Article Content */}
+                             
                                 <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none">
                                     <div className="whitespace-pre-wrap leading-relaxed">
                                         {blog.content}
                                     </div>
                                 </div>
 
-                                {/* Tags */}
+                              
                                 <div className="mt-16 pt-8 border-t border-border/20">
                                     <div className="flex flex-wrap gap-2">
                                         {blog.tags.map((tag, index) => (
@@ -398,7 +239,7 @@ The future of web development looks bright with tools like Next.js leading the w
                                     </div>
                                 </div>
 
-                                {/* Author Bio */}
+                         
                                 <div className="mt-16 p-8 border border-border/20 bg-card/50 backdrop-blur-sm">
                                     <div className="flex items-start gap-4">
                                         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
@@ -413,7 +254,7 @@ The future of web development looks bright with tools like Next.js leading the w
                                     </div>
                                 </div>
 
-                                {/* Comments Section */}
+                             
                                 <div id="comments" className="mt-16">
                                     <div className="flex items-center gap-2 mb-8">
                                         <h3 className="text-2xl font-light">Comments</h3>
@@ -454,8 +295,7 @@ The future of web development looks bright with tools like Next.js leading the w
                                             </div>
                                         </div>
                                     </form>
-
-                                    {/* Comments List */}
+                       
                                     <div className="space-y-6">
                                         {comments.map((comment) => (
                                             <div key={comment.id} className="flex items-start gap-4 p-6 border border-border/20 bg-card/30 backdrop-blur-sm">
@@ -509,7 +349,6 @@ The future of web development looks bright with tools like Next.js leading the w
                 </section>
             </article>
 
-            {/* More Blogs Section */}
             <section className="px-4 py-20 border-t border-border/10">
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-16">
@@ -527,7 +366,7 @@ The future of web development looks bright with tools like Next.js leading the w
                                 <Link href={`/blogs/${relatedBlog.slug}`} key={relatedBlog.id}>
                                     <article className="group border border-border/20 hover:border-primary/30 transition-all duration-500 bg-card/50 hover:bg-card backdrop-blur-sm cursor-pointer h-full">
                                         <div className="p-6 h-full flex flex-col">
-                                            {/* Category */}
+                                        
                                             <div className="flex items-center gap-3 mb-4">
                                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
                                                     <IconComponent className="w-4 h-4 text-primary" />
@@ -537,17 +376,14 @@ The future of web development looks bright with tools like Next.js leading the w
                                                 </span>
                                             </div>
                                             
-                                            {/* Title */}
                                             <h3 className="text-xl font-light leading-tight mb-3 group-hover:text-primary transition-colors duration-300">
                                                 {relatedBlog.title}
                                             </h3>
-                                            
-                                            {/* Description */}
+                                                                                
                                             <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-grow">
                                                 {relatedBlog.description}
                                             </p>
-
-                                            {/* Meta Info */}
+                                    
                                             <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border/10">
                                                 <div className="flex items-center gap-4">
                                                     <div className="flex items-center gap-1">
@@ -571,7 +407,7 @@ The future of web development looks bright with tools like Next.js leading the w
                         })}
                     </div>
 
-                    {/* View All Blogs Button */}
+                
                     <div className="text-center mt-12">
                         <Link href="/blogs">
                             <Button variant="outline" size="lg" className="rounded-none border-primary text-primary hover:bg-primary hover:text-primary-foreground">

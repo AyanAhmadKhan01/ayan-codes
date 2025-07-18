@@ -3,7 +3,7 @@ import { ThemeProvider } from "./themeProvider";
 import PostProvider from "./context/postContext";
 import { NextAuthProvider } from "@/app/providers";
 import FetchPostProvider from "./context/fetchPost";
-
+import ReactQueryProvider from "./reactQueryProvider";
 
 
 import "@fontsource/inter";
@@ -17,7 +17,7 @@ export default function RootLayout({ children}) {
       <body
         className={` antialiased`}
       >
-
+<ReactQueryProvider>
         <ThemeProvider 
         attribute='class'
         defaultTheme="system"
@@ -32,6 +32,7 @@ export default function RootLayout({ children}) {
         </FetchPostProvider>
           </NextAuthProvider>
         </ThemeProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );

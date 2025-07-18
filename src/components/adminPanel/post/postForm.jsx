@@ -13,6 +13,7 @@ export default function PostForm() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm();
 
@@ -20,11 +21,13 @@ export default function PostForm() {
   const { postId } = useContext(postIdContext);
 
   const [blogs, setBlogs] = useState([]);
-  const [content, setContent] = useState("");
+  const [showEditor, setShowEditor] = useState(false);
+  const [editingBlog, setEditingBlog] = useState(null);;
   const [featuredImage, setFeaturedImage] = useState("");
   const [tags, setTags] = useState([]);
   const [newTag, setNewTag] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [useSimpleEditor, setUseSimpleEditor] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
 
   const quillRef = useRef(null);
@@ -62,24 +65,31 @@ export default function PostForm() {
   };
 
 
-  const handlePublish = async () => {
+  const handlePublish = async (data) => {
     const blogData = {
-      title,
-      slug,
-      excerpt,
-      content,
-      featuredImage,
-      tags,
-      seoTitle,
-      metaDescription,
+      ...data,
+       tags: tags,
+      featuredImage: featuredImage,
+      imageUrl: imageUrl,
+      content: data.content,
       status: "published",
       author: "Ayan Codes",
-    //   createdAt: editingBlog.createdAt || new Date().toISOString(),
-    //   updatedAt: new Date().toISOString(),
+      createdAt: editingBlog?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       readTime: Math.ceil(
-        content.replace(/<[^>]*>/g, "").split(" ").length / 200
+        data.content.replace(/<[^>]*>/g, "").split(" ").length / 200
       ),
     };
+
+    if (editingBlog) {
+      setBlogs((prev) =>
+        prev.map((blog) => (blog.id === editingBlog.id ? blogData : blog))
+      );
+    } else {
+      setBlogs((prev) => [blogData, ...prev]);
+    }
+
+    setShowEditor(false);
 
     try {
       const response = await fetch("/api/post", {
@@ -110,18 +120,20 @@ export default function PostForm() {
 
   const insertImage = () => {
     if (imageUrl.trim()) {
-      if (quillRef.current) {
+      if (!useSimpleEditor && quillRef.current) {
         const editor = quillRef.current.getEditor();
         if (editor) {
           const range = editor.getSelection();
-          editor.insertEmbed(range ? range.index : 0, "image", imageUrl);
-          if (range) {
-            editor.setSelection(range.index + 1);
-          }
+          const insertIndex = range ? range.index : editor.getLength();
+          editor.insertEmbed(insertIndex, "image", imageUrl);
+          editor.setSelection(insertIndex + 1);
         }
       } else {
+       
+        const currentContent = watch("content") || "";
         const imageHtml = `<img src="${imageUrl}" alt="Inserted image" style="max-width: 100%; height: auto;" />`;
-        setContent((prev) => prev + imageHtml);
+        const newContent = currentContent + imageHtml;
+        setValue("content", newContent);
       }
       setImageUrl("");
       setShowImageModal(false);
@@ -133,7 +145,9 @@ export default function PostForm() {
     const addTags = {
       ...data,
       tags: tags,
-      featuredImage: featuredImage,   
+      featuredImage: featuredImage,
+      imageUrl: imageUrl,
+      content: data.content,
     };
     console.log("Submit the form", addTags);
   };
@@ -144,12 +158,12 @@ export default function PostForm() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-4xl md:text-5xl font-light mb-3">
-              {/* {editingBlog ? "Edit Post" : "Create New Post"} */}
+              {editingBlog ? "Edit Post" : "Create New Post"}
             </h1>
             <p className="text-muted-foreground text-lg">
-              {/* {editingBlog
+              {editingBlog
                 ? "Update your blog post"
-                : "Write and publish your blog post"} */}
+                : "Write and publish your blog post"}
             </p>
           </div>
           <Button
@@ -166,7 +180,7 @@ export default function PostForm() {
             <div>
               <label className="block text-sm font-medium mb-2">Title</label>
               <input
-                {...register("Title", { required: true })}
+                {...register("title", { required: true })}
                 placeholder="Enter your blog title..."
                 className="w-full px-4 py-3 border border-border/20 bg-background/50 focus:outline-none focus:border-primary/60 transition-colors rounded-none text-lg"
               />
@@ -192,24 +206,40 @@ export default function PostForm() {
             </div>
 
             <div>
-                <label className="block text-sm font-medium mb-3">Content</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium">Content</label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setUseSimpleEditor(!useSimpleEditor)}
+                    className="text-xs rounded-none"
+                  >
+                    {useSimpleEditor ? "Use Rich Editor" : "Use Simple Editor"}
+                  </Button>
+                </div>
+              </div>
               <div className="border border-border/20 bg-background/50 rounded-none overflow-hidden">
-                <Controller
-                  name="content"
-                  control={control}
-                  defaultValue=""
-                  rules={{ required: true }}
-                  render={({ field }) =>
-                      <QuillEditor
-                        ref={quillRef}
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Start writing your blog post..."
-                        height="400px"
-                        onImageInsert={() => setShowImageModal(true)}
-                         />
-}      
-                />
+ <Controller
+  name="content"
+  control={control}
+  defaultValue=""
+  rules={{ required: true }}
+  render={({ field }) => (
+    <QuillEditor
+      value={field.value}
+      onChange={field.onChange}
+      placeholder="Start writing your blog post..."
+      height="400px"
+      onImageInsert={() => setShowImageModal(true)}
+    />
+  )}
+/>
+
+
+                    
+    
               </div>
             </div>
 
@@ -264,7 +294,7 @@ export default function PostForm() {
                 </Button>
                 <Button
                   // onClick={() => {handlePublish(); handleEditBlog();}}
-                  onClick={handleSubmit(onSubmit)}
+                  onClick={handleSubmit(handlePublish)}
                   className="w-full rounded-none cursor-pointer"
                   disabled={isSubmitting}
                 >
@@ -351,7 +381,7 @@ export default function PostForm() {
                     SEO Title
                   </label>
                   <input
-                    {...register("seo-title", { required: true })}
+                    {...register("seoTitle", { required: true })}
                     placeholder="SEO optimized title"
                     className="w-full px-3 py-2 border border-border/20 bg-background/50 focus:outline-none focus:border-primary/60 transition-colors rounded-none text-sm"
                   />
@@ -361,7 +391,7 @@ export default function PostForm() {
                     Meta Description
                   </label>
                   <textarea
-                    {...register("seo-description", { required: true })}
+                    {...register("metaDescription", { required: true })}
                     placeholder="Meta description for search engines"
                     rows={3}
                     className="w-full px-3 py-2 border border-border/20 bg-background/50 focus:outline-none focus:border-primary/60 transition-colors rounded-none text-sm resize-none"
