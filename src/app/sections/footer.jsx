@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button"
 
 export default function Footer() {
     const socialLinks = [
-        { name: 'GitHub', icon: Github, href: '#' },
-        { name: 'Twitter', icon: Twitter, href: '#' },
-        { name: 'LinkedIn', icon: Linkedin, href: '#' },
+        { name: 'GitHub', icon: Github, href: 'https://github.com/AyanAhmadKhan01' },
+        { name: 'Twitter', icon: Twitter, href: 'https://x.com/DevLegend_' },
+        { name: 'LinkedIn', icon: Linkedin, href: 'https://www.linkedin.com/in/ayanahmadkhan' },
         { name: 'Email', icon: Mail, href: 'mailto:hello@ayan.codes' }
     ]
 
@@ -19,9 +19,7 @@ export default function Footer() {
     return (
         <footer className="border-t border-border/20 bg-background/80 backdrop-blur-sm">
             <div className="max-w-6xl mx-auto px-4 py-20">
-                {/* Main Footer Content */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-16 mb-16">
-                    {/* Brand Section */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-16 mb-16">   
                     <div className="space-y-6">
                         <div>
                             <h3 className="text-2xl font-light tracking-tight mb-4">
@@ -35,7 +33,6 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    {/* Navigation Links */}
                     <div className="space-y-6">
                         <div>
                             <h4 className="text-sm tracking-[0.2em] uppercase text-primary mb-6">
@@ -70,7 +67,7 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    {/* Connect Section */}
+        
                     <div className="space-y-6">
                         <div>
                             <h4 className="text-sm tracking-[0.2em] uppercase text-primary mb-6">
@@ -83,6 +80,7 @@ export default function Footer() {
                                         <a 
                                             key={index}
                                             href={link.href}
+                                            target='_blank'
                                             className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors duration-300 group"
                                         >
                                             <div className="w-8 h-8 rounded-full bg-primary/5 group-hover:bg-primary/10 flex items-center justify-center transition-colors duration-300">

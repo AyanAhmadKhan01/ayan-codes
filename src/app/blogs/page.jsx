@@ -1,33 +1,40 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Code, ArrowRight, Calendar, Clock } from "lucide-react"
+import { ArrowRight, Calendar, Clock } from "lucide-react"
 import Navbar from '../sections/navbar'
 import Footer from '../sections/footer'
 import { format } from 'date-fns'
+import { useQuery } from '@tanstack/react-query'
+import BlogSkeleton from './blogSkeleton'
+import { fetchApi } from '@/lib/api'
 
 
 export default function Blog() {
-    const [blogs, setBlogs] = useState([])
-    const [loading, setLoading] = useState(true)
-
-useEffect(() => {
-const fetchBlog = async () => {
-    try {
-        const response = await fetch("/api/post", {
-            method: "GET"
-        })
-
-        const data = await response.json();
-        setBlogs(data);
-console.log(blogs);
-    } catch (error) {
-        console.error("Failed to fetch Blogs");
-    }
+ 
+const fetch = async () => {
+ await  new Promise((res) => setTimeout(res, 3000));
+ const apiv1 = await fetchApi('/api/post', 'GET');
+ return apiv1
 }
-fetchBlog();
-}, [])
+
+const {data, isLoading, error} = useQuery({
+    queryKey: ['posts'],
+    queryFn: fetch,
+})
+
+
+
+if (isLoading) return <>
+             <Navbar/>
+               <section className="px-4 py-20">
+                <div className="max-w-6xl mx-auto"><BlogSkeleton/></div></section> 
+                <Footer/>
+                </>
+
+
+
+if (error) return <>Error Loading Post</>
 
 
     return (
@@ -37,10 +44,10 @@ fetchBlog();
                 <div className="max-w-6xl mx-auto">
 
 
-{blogs.map((b, i) => (
+{data.map((b, i) => (
                                     <div key={i}>
                                         <article className="group border border-border/20 hover:border-primary/30 transition-all duration-500 bg-card/50 hover:bg-card backdrop-blur-sm w-full my-4">
-                                            <Link href={`/blogs`}>
+                                            <Link href={`/blogs/${b?.slug}`}>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 cursor-pointer">      
                                                     <div className="md:col-span-2 space-y-6">
                                                         <div className="flex items-center gap-3">
