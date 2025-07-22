@@ -7,7 +7,7 @@ export async function middleware(req) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  if (req.nextUrl.pathname.startsWith("/admin")) {
+  if (req.nextUrl.pathname.startsWith("/auth")) {
     if (!token || token.email !== "ayanahmadkhan042@gmail.com") {
       return NextResponse.redirect(new URL("/not-authorized", req.url));
     }
