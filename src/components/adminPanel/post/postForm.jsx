@@ -1,3 +1,5 @@
+'use client'
+
 import QuillEditor from "@/components/quillEditor";
 import { Button } from "@/components/ui/button";
 import { postContext } from "@/app/context/postContext";
