@@ -72,19 +72,6 @@ export default function Login() {
                         </Button>
                     </div>
 
-                    
-                    <div className="mt-8 text-center">
-                        <p className="text-xs text-muted-foreground">
-                            By signing in, you agree to our{' '}
-                            <Link href="/terms" className="text-primary hover:text-primary/80 transition-colors">
-                                Terms of Service
-                            </Link>
-                            {' '}and{' '}
-                            <Link href="/privacy" className="text-primary hover:text-primary/80 transition-colors">
-                                Privacy Policy
-                            </Link>
-                        </p>
-                    </div>
                 </div>
             </div>
         </section>
