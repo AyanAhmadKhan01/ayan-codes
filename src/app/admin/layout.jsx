@@ -24,11 +24,6 @@ const AdminSidebar = ({ isOpen, onClose }) => {
             href: '/admin',
             icon: FileText,
         },
-        {
-            label: 'Users',
-            href: '/admin/users',
-            icon: Users,
-        },
     ]
 
     const isActiveItem = (item) => {
