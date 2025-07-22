@@ -1,6 +1,4 @@
-'use client'
-
-import QuillEditor from "@/components/quillEditor";
+import QuillEditor from "@/components/QuillEditor";
 import { Button } from "@/components/ui/button";
 import { postContext } from "@/app/context/postContext";
 import { postIdContext } from "@/app/admin/posts/page";
