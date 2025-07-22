@@ -12,7 +12,7 @@ export async function GET(req, {params}) {
       return NextResponse.json({error: "Post Slug is required"}, {status:400})
     }
 
-    const fetchPost = await Post.findOne({slug: id});
+    const fetchPost = await Post.findOne({_id: id});
 
     if(!fetchPost) {
       return NextResponse.json({error: "Post not found"}, {status: 404})

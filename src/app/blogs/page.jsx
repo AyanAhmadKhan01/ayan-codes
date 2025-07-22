@@ -9,11 +9,9 @@ import { useQuery } from '@tanstack/react-query'
 import BlogSkeleton from './blogSkeleton'
 import { fetchApi } from '@/lib/api'
 
-
 export default function Blog() {
  
 const fetch = async () => {
- await  new Promise((res) => setTimeout(res, 3000));
  const apiv1 = await fetchApi('/api/post', 'GET');
  return apiv1
 }
@@ -96,10 +94,7 @@ if (error) return <>Error Loading Post</>
                
                     </div>
                     ))}
-</div>
-
-
-           
+</div>     
             </section>
 
             <Footer />

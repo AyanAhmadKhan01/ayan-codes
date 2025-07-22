@@ -1,9 +1,8 @@
 'use client'
 
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Clock, Share, Bookmark, Heart, MessageCircle, Send } from "lucide-react";
 import Navbar from '../../sections/navbar';
 import Footer from '../../sections/footer';
@@ -12,16 +11,14 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchApi } from '@/lib/api';
 import parse, {domToReact} from "html-react-parser";
 import { Copy, Check } from "lucide-react";
-import { useState } from "react";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 
 export default function BlogPage() {
     const params = useParams()
-    const router = useRouter()
-
-    // Simple language detection based on code content
+    const slug = params.slug;  
+  
     const detectLanguage = (code) => {
         if (code.includes('import ') && code.includes('from ')) return 'javascript';
         if (code.includes('export default') || code.includes('const ') || code.includes('function ')) return 'javascript';
@@ -32,7 +29,7 @@ export default function BlogPage() {
         if (code.includes('public class') || code.includes('System.out')) return 'java';
         if (code.includes('.container') || code.includes('display:')) return 'css';
         if (code.includes('SELECT') || code.includes('FROM')) return 'sql';
-        return 'javascript'; // default
+        return 'javascript'; 
     }
 
     const CodeBlock = ({ code, codeId }) => {
@@ -86,9 +83,11 @@ export default function BlogPage() {
             </div>
         );
     }
+    
 
     const fetchBlog = async () => {
-        const apiv1 = await fetchApi(`/api/post/6878fb239dd422d513f10b34`);
+        await new Promise((r) => setTimeout(r, 100));
+        const apiv1 = await fetchApi(`/api/post/${slug}`);
         return apiv1;
     }
 
@@ -99,17 +98,32 @@ export default function BlogPage() {
         queryFn: fetchBlog,
     })
 
+    if (isLoading) {
+        return(
+            <div className='flex justify-center m-20'>
+                <div className='max-w-[1000px] w-[100%]'>
+                           <Link 
+                            href="/blogs"
+                            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-12 group"
+                        >
+                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                            <span className="text-sm">Back to Blogs</span>
+                        </Link>
+            <BlogContentSkeleton/>
+            </div>
+            </div>
+        )
+    }
+
       const html = data?.fetchPost?.content || "";
 
       const parsedContent = parse(html, {
         replace: (domNode) => {
-          // Handle code block containers
           if (
             domNode.type === "tag" &&
             domNode.name === "div" &&
             domNode.attribs?.class?.includes("ql-code-block-container")
-          ) {
-            // Extract all code lines from child divs
+          ) {      
             const codeLines = [];
             if (domNode.children) {
               domNode.children.forEach((child) => {
@@ -117,8 +131,7 @@ export default function BlogPage() {
                   child.type === "tag" &&
                   child.name === "div" &&
                   child.attribs?.class?.includes("ql-code-block")
-                ) {
-                  // Get text content from the code block div
+                ) {              
                   const lineText = child.children
                     ?.map((c) => {
                       if (c.type === "text") return c.data;
@@ -137,7 +150,6 @@ export default function BlogPage() {
             return <CodeBlock code={codeContent} codeId={codeId} />;
           }
 
-          // Handle individual code blocks (fallback)
           if (
             domNode.type === "tag" &&
             domNode.name === "div" &&
@@ -159,13 +171,10 @@ export default function BlogPage() {
         },
       });
 
-//     if (isLoading) return <div>
-//   <BlogContentSkeleton/> 
-//     </div>
-//     if (error) return <p>Failed load post content</p>
+
+    if (error) return <p>Failed load post content</p>
    
    
-  
     return (
         <>
               <Navbar />

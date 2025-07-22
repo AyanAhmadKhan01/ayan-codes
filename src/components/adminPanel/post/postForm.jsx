@@ -14,15 +14,16 @@ export default function PostForm() {
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm();
 
   const { handleMenu } = useContext(postContext);
   const { postId } = useContext(postIdContext);
 
-  const [blogs, setBlogs] = useState([]);
+  const [blogs, setBlogs] = useState({});
   const [showEditor, setShowEditor] = useState(false);
-  const [editingBlog, setEditingBlog] = useState(null);;
+  const [editingBlog, setEditingBlog] = useState(null);
   const [featuredImage, setFeaturedImage] = useState("");
   const [tags, setTags] = useState([]);
   const [newTag, setNewTag] = useState("");
@@ -31,15 +32,38 @@ export default function PostForm() {
   const [showImageModal, setShowImageModal] = useState(false);
 
   const quillRef = useRef(null);
+  console.log("Blogs data:", blogs);
+  console.log("PostId:", postId);
+
+
+  useEffect(() => {
+    if (!postId) {
+      console.log("Clearing form for new post on mount");
+      setEditingBlog(null);
+      reset({
+        title: "",
+        slug: "",
+        excerpt: "",
+        content: "",
+        seoTitle: "",
+        metaDescription: ""
+      });
+      setFeaturedImage("");
+      setTags([]);
+      setBlogs({});
+    }
+  }, [postId, reset]);
 
   useEffect(() => {
     if(!postId) return;
 
     const fetchPostIdData = async () => {
       try {
-        const response = await fetch(`/api/post/${postId}`);
+        const response = await fetch(`/api/admin/${postId}`);
         const data = await response.json();
-        setBlogs(data);
+        console.log("Fetched data:", data);
+      
+        setBlogs(data.fetchPost || {});
       } catch (error) {
         console.error("Failed to get post id data", error);
       }
@@ -47,28 +71,38 @@ export default function PostForm() {
     fetchPostIdData();
   }, [postId]);
 
-  const handleEditBlog = async (blog) => {
-    try {
-      const response = await fetch("/api/post", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(),
-      });
-      if (!response.ok) {
-        console.error("Post Update Failed");
-      }
-    } catch (error) {
-      console.error("Failed to Update Post", error);
-    }
-  };
 
+  useEffect(() => {
+    console.log("Form population effect triggered", { blogs, postId });
+    
+    if (blogs && Object.keys(blogs).length > 0 && postId) {
+      console.log("Populating form with data:", blogs);
+      
+    
+      setEditingBlog(blogs);
+      
+      
+      reset({
+        title: blogs.title || "",
+        slug: blogs.slug || "",
+        excerpt: blogs.excerpt || "",
+        content: blogs.content || "",
+        seoTitle: blogs.seoTitle || "",
+        metaDescription: blogs.metaDescription || ""
+      });
+      
+     
+      setFeaturedImage(blogs.featuredImage || "");
+      setTags(blogs.tags || []);
+      
+      console.log("Form fields populated");
+    }
+  }, [blogs, postId, reset]);
 
   const handlePublish = async (data) => {
     const blogData = {
       ...data,
-       tags: tags,
+      tags: tags,
       featuredImage: featuredImage,
       imageUrl: imageUrl,
       content: data.content,
@@ -81,29 +115,29 @@ export default function PostForm() {
       ),
     };
 
-    if (editingBlog) {
-      setBlogs((prev) =>
-        prev.map((blog) => (blog.id === editingBlog.id ? blogData : blog))
-      );
-    } else {
-      setBlogs((prev) => [blogData, ...prev]);
+    
+    if (editingBlog && editingBlog._id) {
+      blogData._id = editingBlog._id;
     }
-
-    setShowEditor(false);
 
     try {
       const response = await fetch("/api/post", {
-        method: "POST",
+        method: editingBlog ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(blogData),
       });
-      if (!response.ok) {
-        console.error("post failed");
+      
+      if (response.ok) {
+        console.log(editingBlog ? "Post updated successfully" : "Post published successfully");
+      
+        handleMenu();
+      } else {
+        console.error(editingBlog ? "Post update failed" : "Post publish failed");
       }
     } catch (err) {
-      console.error("Failed to publish blog Post", err);
+      console.error(editingBlog ? "Failed to update blog post" : "Failed to publish blog post", err);
     }
   };
 
@@ -138,18 +172,6 @@ export default function PostForm() {
       setImageUrl("");
       setShowImageModal(false);
     }
-  };
-
-  const onSubmit = async (data) => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    const addTags = {
-      ...data,
-      tags: tags,
-      featuredImage: featuredImage,
-      imageUrl: imageUrl,
-      content: data.content,
-    };
-    console.log("Submit the form", addTags);
   };
 
   return (
@@ -236,10 +258,7 @@ export default function PostForm() {
     />
   )}
 />
-
-
-                    
-    
+   
               </div>
             </div>
 
@@ -255,7 +274,7 @@ export default function PostForm() {
                       <input
                         value={imageUrl}
                         onChange={(e) => setImageUrl(e.target.value)}
-                        placeholder="https://example.com/image.jpg"
+                        placeholder="Enter Image Url"
                         className="w-full px-3 py-2 border border-border/20 bg-background/50 focus:outline-none focus:border-primary/60 transition-colors rounded-none"
                       />
                     </div>
@@ -285,21 +304,15 @@ export default function PostForm() {
               <h3 className="text-lg font-medium mb-4">Actions</h3>
               <div className="space-y-3">
                 <Button
-                //   onClick={handleSaveDraft}
-                  variant="outline"
-                  className="w-full rounded-none"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Save as Draft
-                </Button>
-                <Button
-                  // onClick={() => {handlePublish(); handleEditBlog();}}
                   onClick={handleSubmit(handlePublish)}
                   className="w-full rounded-none cursor-pointer"
                   disabled={isSubmitting}
                 >
                   <Send className="w-4 h-4 mr-2" />
-                  {isSubmitting ? "Sumbiting..." : "Publish"}
+                  {isSubmitting 
+                    ? (editingBlog ? "Updating..." : "Publishing...") 
+                    : (editingBlog ? "Update Post" : "Publish Post")
+                  }
                 </Button>
                 <Button
                   onClick={() => setShowImageModal(true)}
