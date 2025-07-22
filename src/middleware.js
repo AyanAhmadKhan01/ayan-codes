@@ -8,7 +8,7 @@ export async function middleware(req) {
   });
 
   if (req.nextUrl.pathname.startsWith("/admin")) {
-    if (!token || token.email !== 'ayanahmadkhan042@gmail.com') {
+    if (!token || token.email !== "ayanahmadkhan042@gmail.com") {
       return NextResponse.redirect(new URL("/not-authorized", req.url));
     }
   }
