@@ -2,6 +2,7 @@
    export const fetchApi = async (url, method = "GET", body) => {
         try{
             const response = await fetch(url, {
+                method,
                 headers: {'Content-Type': 'application/json'},
                 body: body ? JSON.stringify(body) : undefined,
             })

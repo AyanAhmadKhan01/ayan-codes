@@ -26,7 +26,7 @@ export default function Hero() {
          I build full-stack apps with Next.js, React, Redux, and Node.js — crafting clean UIs, scalable APIs, JWT auth, and MongoDB backends.
         </p>
 
-        <div className="flex gap-6 translate-y-28">
+        <div className="flex gap-6 translate-y-8 md:translate-y-16 lg:translate-y-28">
           <Button variant="transparent" className="group p-0 h-auto">
             <span className="border-b border-primary pb-1 group-hover:border-primary/60 transition-colors">
               Latest Posts
@@ -35,7 +35,7 @@ export default function Hero() {
         </div>
       </div>
       
-      <div className="flex justify-center lg:justify-end">
+      <div className="hidden lg:flex justify-center lg:justify-end">
         <div className="w-80 h-80 border border-primary/10 relative group cursor-pointer">
           <div className="absolute inset-4 border border-primary/20 transition-all duration-500 group-hover:inset-2"></div>
           <div className="absolute inset-8 bg-primary/5 transition-all duration-500 group-hover:bg-primary/10"></div>

@@ -1,6 +1,6 @@
 'use client'
 
-
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Clock, Share, Bookmark, Heart, MessageCircle, Send } from "lucide-react";
@@ -13,11 +13,13 @@ import parse, {domToReact} from "html-react-parser";
 import { Copy, Check } from "lucide-react";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-
+import { Button } from '@/components/ui/button';
 
 export default function BlogPage() {
     const params = useParams()
-    const slug = params.slug;  
+    const slug = params.slug;
+    const [isBookmarked, setIsBookmarked] = useState(false);
+    const [shareTooltip, setShareTooltip] = useState(false);  
   
     const detectLanguage = (code) => {
         if (code.includes('import ') && code.includes('from ')) return 'javascript';
@@ -86,36 +88,97 @@ export default function BlogPage() {
     
 
     const fetchBlog = async () => {
-        await new Promise((r) => setTimeout(r, 100));
         const apiv1 = await fetchApi(`/api/post/${slug}`);
         return apiv1;
     }
 
+    const handleShare = async () => {
+        const url = window.location.href;
+        const title = data?.fetchPost?.title || 'Check out this blog post';
+        
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: title,
+                    url: url,
+                });
+            } catch (err) {
+                console.log('Error sharing:', err);
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(url);
+                setShareTooltip(true);
+                setTimeout(() => setShareTooltip(false), 2000);
+            } catch (err) {
+                console.log('Failed to copy URL:', err);
+            }
+        }
+    };
 
+    
 
     const {data, isLoading, error} = useQuery({
-        queryKey: ['post'],
+        queryKey: ['post', slug],
         queryFn: fetchBlog,
     })
 
     if (isLoading) {
         return(
-            <div className='flex justify-center m-20'>
-                <div className='max-w-[1000px] w-[100%]'>
-                           <Link 
+            <>
+                <Navbar />
+                <article className='px-4 py-20'>
+                    <div className='max-w-[1200px] mx-auto'>
+                        <Link 
                             href="/blogs"
                             className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-12 group"
                         >
                             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                             <span className="text-sm">Back to Blogs</span>
                         </Link>
-            <BlogContentSkeleton/>
-            </div>
-            </div>
+                        
+                        <header className="mb-16">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-10 h-10 rounded-full bg-muted animate-pulse"></div>
+                                <div className="h-4 w-32 bg-muted animate-pulse rounded"></div>
+                            </div>
+
+                            <div className="h-16 bg-muted animate-pulse rounded mb-8"></div>
+                            <div className="h-6 bg-muted animate-pulse rounded mb-4 max-w-3xl"></div>
+                            <div className="h-6 bg-muted animate-pulse rounded mb-12 max-w-2xl"></div>
+
+                            <div className="flex flex-wrap items-center gap-8 pb-8 border-b border-border/20">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-full bg-muted animate-pulse"></div>
+                                    <div>
+                                        <div className="h-4 w-24 bg-muted animate-pulse rounded mb-2"></div>
+                                        <div className="h-3 w-32 bg-muted animate-pulse rounded"></div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-6">
+                                    <div className="h-4 w-20 bg-muted animate-pulse rounded"></div>
+                                    <div className="h-4 w-16 bg-muted animate-pulse rounded"></div>
+                                </div>
+                                <div className="flex items-center gap-2 ml-auto">
+                                    <div className="w-8 h-8 bg-muted animate-pulse rounded"></div>
+                                    <div className="w-8 h-8 bg-muted animate-pulse rounded"></div>
+                                </div>
+                            </div>
+                        </header>
+
+                        <div className="space-y-4">
+                            <div className="h-4 bg-muted animate-pulse rounded"></div>
+                            <div className="h-4 bg-muted animate-pulse rounded"></div>
+                            <div className="h-4 bg-muted animate-pulse rounded w-3/4"></div>
+                        </div>
+                    </div>
+                </article>
+                <Footer />
+            </>
         )
     }
 
-      const html = data?.fetchPost?.content || "";
+    const html = data?.fetchPost?.content || "";
 
       const parsedContent = parse(html, {
         replace: (domNode) => {
@@ -177,133 +240,143 @@ export default function BlogPage() {
    
     return (
         <>
-              <Navbar />
-              <div className='flex justify-center m-20'>
-                <div className='max-w-[1000px] w-[100%]'>
-                                <Link 
-                            href="/blogs"
-                            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-12 group"
-                        >
-                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                            <span className="text-sm">Back to Blogs</span>
-                        </Link>
-                                                                                                             
-                                <header className="mb-16">
-                                    <div className="flex items-center gap-3 mb-8">
-                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                            {/* <blog.icon className="w-4 h-4 text-primary" /> */}
-                                        </div>
-                                        <span className="text-xs tracking-[0.2em] uppercase text-primary">
-                                            gg
-                                        </span>
-                                    </div>
+            <Navbar />
+            <article className='px-4 py-20'>
+                <div className='max-w-6xl mx-auto'>
+                    <Link 
+                        href="/blogs"
+                        className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-12 group"
+                    >
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        <span className="text-sm">Back to Blogs</span>
+                    </Link>
+                                                                                                         
+                    <header className="mb-16">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <span className="text-primary font-medium">A</span>
+                            </div>
+                            <span className="text-sm tracking-[0.2em] uppercase text-muted-foreground">
+                                {data?.fetchPost?.author || 'Ayan Codes'}
+                            </span>
+                        </div>
 
-                                    <h1 className="text-4xl md:text-6xl font-light tracking-tight leading-[1.1] mb-8">
-                                        {data?.fetchPost?.title}
-                                    </h1>
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight leading-[1.1] mb-8">
+                            {data?.fetchPost?.title}
+                        </h1>
 
-                                    <p className="text-xl text-muted-foreground leading-relaxed mb-12 max-w-3xl">
-                                        {data?.fetchPost?.description}
-                                    </p>
+                        <p className="text-xl text-muted-foreground leading-relaxed mb-12 max-w-3xl">
+                            {data?.fetchPost?.excerpt}
+                        </p>
 
-                                    <div className="flex flex-wrap items-center gap-8 pb-8 border-b border-border/20">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                                                <span className="text-sm font-medium">A</span>
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium">{data?.fetchPost?.author}</p>
-                                                <p className="text-xs text-muted-foreground">{data?.fetchPost?.author}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                                            <div className="flex items-center gap-1">
-                                                <Calendar className="w-3 h-3" />
-                                                <span>{new Date(data?.fetchPost?.publishedAt).toLocaleDateString()}</span>
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <Clock className="w-3 h-3" />
-                                                <span>{data?.fetchPost?.readTime} min</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2 ml-auto">
-                                            {/* <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={toggleLike}
-                                                className={`hover:bg-muted flex items-center gap-1 ${isLiked ? 'text-red-500' : ''}`}
-                                            >
-                                                <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                                                <span className="text-xs">{likeCount}</span>
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })}
-                                                className="hover:bg-muted flex items-center gap-1"
-                                            >
-                                                <MessageCircle className="w-4 h-4" />
-                                                <span className="text-xs">jjj</span>
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={handleShare}
-                                                className="hover:bg-muted"
-                                            >
-                                                <Share className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={toggleBookmark}
-                                                className={`hover:bg-muted`}
-                                            >
-                                                <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
-                                            </Button> */}
-                                        </div>
-                                    </div>
-                                </header>                    
-                             
-                                <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none">
-                                    <div className="whitespace-pre-wrap leading-relaxed">
-                                       {parsedContent}
-                                    </div>
+                        <div className="flex flex-wrap items-center gap-8 pb-8 border-b border-border/20">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                                    <span className="text-lg font-medium">A</span>
                                 </div>
+                                <div>
+                                    <p className="text-sm font-medium">{data?.fetchPost?.author || 'Ayan Codes'}</p>
+                                    <p className="text-xs text-muted-foreground">Developer & Creator</p>
+                                </div>
+                            </div>
 
-                              
-                                <div className="mt-16 pt-8 border-t border-border/20">                            
-                                    <div className="flex flex-wrap gap-2">
-                                         {data?.fetchPost?.tags?.map((t, i) => (
-                                            <span 
-                                                 key={i}
-                                                className="text-xs px-3 py-1 bg-muted/50 text-muted-foreground rounded-none border border-border/20 hover:border-primary/30 transition-colors"
-                                            >
-                                               {t}
-                                            </span>
-                                         ))}
-                                    </div> 
+                            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4" />
+                                    <span>{new Date(data?.fetchPost?.createdAt).toLocaleDateString('en-US', { 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    })}</span>
                                 </div>
+                                <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4" />
+                                    <span>{data?.fetchPost?.readTime} min read</span>
+                                </div>
+                            </div>
 
-                         
-                                <div className="mt-16 p-8 border border-border/20 bg-card/50 backdrop-blur-sm">
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                                            <span className="text-xl font-medium">A</span>
+                            <div className="flex items-center gap-2 ml-auto">
+                                <div className="relative">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleShare}
+                                        className="hover:bg-muted hover:text-primary transition-colors"
+                                        title="Share this post"
+                                    >
+                                        <Share className="w-4 h-4" />
+                                    </Button>
+                                    {shareTooltip && (
+                                        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded whitespace-nowrap">
+                                            Link copied!
                                         </div>
-                                        <div>
-                                            <h3 className="text-lg font-medium mb-2">About </h3>
-                                            <p className="text-muted-foreground leading-relaxed">
-                                                . Follow me on social media for more insights about web development and building in public.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div> 
+                                    )}
+                                </div>                       
+                            </div>
+                        </div>
+                    </header>
+
+                    {data?.fetchPost?.featuredImage && (
+                        <div className="mb-16">
+                            <img 
+                                src={data.fetchPost.featuredImage} 
+                                alt={data.fetchPost.title}
+                                className="w-full h-96 object-cover border border-border/20"
+                            />
+                        </div>
+                    )}
+                 
+                    <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none">
+                        <div className="whitespace-pre-wrap leading-relaxed text-base lg:text-lg">
+                           {parsedContent}
+                        </div>
+                    </div>
+
+                  
+                    <div className="mt-16 pt-8 border-t border-border/20">
+                        <h3 className="text-lg font-medium mb-4">Tags</h3>
+                        <div className="flex flex-wrap gap-2">
+                             {data?.fetchPost?.tags?.map((t, i) => (
+                                <span 
+                                     key={i}
+                                    className="text-sm px-4 py-2 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer"
+                                >
+                                   {t}
+                                </span>
+                             ))}
+                        </div> 
+                    </div>
+
+                 
+                    <div className="mt-16 p-8 border border-border/20 bg-card/50 backdrop-blur-sm">
+                        <div className="flex items-start gap-6">
+                            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                <span className="text-xl font-medium">A</span>
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-medium mb-3">About the Author</h3>
+                                <p className="text-muted-foreground leading-relaxed mb-4">
+                                    I'm Ayan, a full-stack developer passionate about creating modern web applications with Next.js, React, and Node.js. 
+                                    I love sharing knowledge about web development and building in public.
+                                </p>
+                                <div className="flex gap-4">
+                                    <Link href="/blogs">
+                                        <Button variant="outline" size="sm">
+                                            More Posts
+                                        </Button>
+                                    </Link>
+                                    <Link href="https://github.com/AyanAhmadKhan01" target="_blank">
+                                        <Button variant="ghost" size="sm">
+                                            Follow
+                                        </Button>
+                                    </Link>
                                 </div>
-                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
             <Footer />
-       </>
+        </>
     )
 }

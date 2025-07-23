@@ -56,13 +56,7 @@ export default function Footer() {
                                     className="block text-muted-foreground hover:text-primary transition-colors duration-300"
                                 >
                                     Portfolio
-                                </Link>
-                                <Link 
-                                    href="/about" 
-                                    className="block text-muted-foreground hover:text-primary transition-colors duration-300"
-                                >
-                                    About
-                                </Link>
+                                </Link>       
                             </nav>
                         </div>
                     </div>
@@ -95,29 +89,15 @@ export default function Footer() {
                     </div>
                 </div>
 
-                {/* Bottom Section */}
+             
                 <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border/10">
                     <div className="flex items-center gap-8 mb-4 md:mb-0">
                         <p className="text-sm text-muted-foreground">
                             © 2025 Ayan.codes. All rights reserved.
-                        </p>
-                        <div className="hidden md:flex items-center gap-6">
-                            <Link 
-                                href="/privacy" 
-                                className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                            >
-                                Privacy
-                            </Link>
-                            <Link 
-                                href="/terms" 
-                                className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                            >
-                                Terms
-                            </Link>
-                        </div>
+                        </p>       
                     </div>
 
-                    {/* Back to Top */}
+                 
                     <Button 
                         variant="ghost" 
                         size="sm"
@@ -133,7 +113,7 @@ export default function Footer() {
                     </Button>
                 </div>
 
-                {/* Decorative Elements */}
+               
                 <div className="absolute bottom-20 left-20 w-px h-16 bg-primary/10 hidden lg:block"></div>
                 <div className="absolute bottom-20 right-20 w-16 h-px bg-primary/10 hidden lg:block"></div>
             </div>
